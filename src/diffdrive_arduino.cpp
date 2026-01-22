@@ -13,11 +13,11 @@ DiffDriveArduino::DiffDriveArduino()
 
 
 
-
-return_type DiffDriveArduino::configure(const hardware_interface::HardwareInfo & info)
+CallbackReturn DiffDriveArduino::on_init(const hardware_interface::HardwareInfo & info)
 {
-  if (configure_default(info) != return_type::OK) {
-    return return_type::ERROR;
+  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+  {
+    return CallbackReturn::ERROR;
   }
 
   RCLCPP_INFO(logger_, "Configuring...");
@@ -41,8 +41,7 @@ return_type DiffDriveArduino::configure(const hardware_interface::HardwareInfo &
 
   RCLCPP_INFO(logger_, "Finished Configuration");
 
-  status_ = hardware_interface::status::CONFIGURED;
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
 std::vector<hardware_interface::StateInterface> DiffDriveArduino::export_state_interfaces()
@@ -72,7 +71,7 @@ std::vector<hardware_interface::CommandInterface> DiffDriveArduino::export_comma
 }
 
 
-return_type DiffDriveArduino::start()
+CallbackReturn DiffDriveArduino::on_activate(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(logger_, "Starting Controller...");
 
@@ -81,20 +80,18 @@ return_type DiffDriveArduino::start()
   // arduino.setPidValues(14,7,0,100);
   arduino_.setPidValues(30, 20, 0, 100);
 
-  status_ = hardware_interface::status::STARTED;
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
-return_type DiffDriveArduino::stop()
+CallbackReturn DiffDriveArduino::on_deactivate(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(logger_, "Stopping Controller...");
-  status_ = hardware_interface::status::STOPPED;
 
-  return return_type::OK;
+  return CallbackReturn::SUCCESS;
 }
 
-hardware_interface::return_type DiffDriveArduino::read()
+hardware_interface::return_type DiffDriveArduino::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
 
   // TODO fix chrono duration
@@ -120,31 +117,18 @@ hardware_interface::return_type DiffDriveArduino::read()
   pos_prev = r_wheel_.pos;
   r_wheel_.pos = r_wheel_.calcEncAngle();
   r_wheel_.vel = (r_wheel_.pos - pos_prev) / deltaSeconds;
-
-
-
   return return_type::OK;
-
-  
 }
 
-hardware_interface::return_type DiffDriveArduino::write()
+// TODO: Can use time?
+hardware_interface::return_type DiffDriveArduino::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-
   if (!arduino_.connected())
   {
     return return_type::ERROR;
   }
-
   arduino_.setMotorValues(l_wheel_.cmd / l_wheel_.rads_per_count / cfg_.loop_rate, r_wheel_.cmd / r_wheel_.rads_per_count / cfg_.loop_rate);
-
-
-
-
   return return_type::OK;
-
-
-  
 }
 
 
