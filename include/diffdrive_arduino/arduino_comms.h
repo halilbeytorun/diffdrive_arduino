@@ -20,9 +20,9 @@ public:
   void setMotorValues(int val_1, int val_2);
   void setPidValues(float k_p, float k_d, float k_i, float k_o);
   bool connected() const { return serial_conn_.isOpen(); }
+private:
   std::string sendMsg(const std::string &msg_to_send, bool print_output = false);
 
-private:
   serial::Serial serial_conn_;  ///< Underlying serial connection 
 };
 
